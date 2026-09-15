@@ -1,0 +1,16 @@
+# Java / Maven
+target/
+*.class
+
+# IntelliJ
+../.idea/
+*.iml
+
+# Node
+node_modules/
+frontend/dist/
+
+# Environment / secrets
+.env
+.env.*
+application-local.properties
