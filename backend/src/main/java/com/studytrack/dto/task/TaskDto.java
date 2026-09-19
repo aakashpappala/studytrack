@@ -23,11 +23,20 @@ public class TaskDto {
     private String priority; // LOW, MEDIUM, HIGH
     private String status;   // NOT_STARTED, IN_PROGRESS, COMPLETED
     private LocalDateTime completedAt;
+    private String proofType;
+    private String proofUrl;
+    private LocalDateTime submittedAt;
+    private LocalDateTime verifiedAt;
+    private String adminMessage;
     private LocalDateTime createdAt;
 
     public TaskDto() {}
 
-    public TaskDto(Long id, Long studentId, String studentName, Long roadmapId, String roadmapTitle, Long subjectId, String subjectTitle, Long moduleId, String moduleTitle, Long topicId, String topicTitle, String title, String description, LocalDate assignedDate, LocalDate dueDate, Integer estimatedDurationMinutes, String priority, String status, LocalDateTime completedAt, LocalDateTime createdAt) {
+    public TaskDto(Long id, Long studentId, String studentName, Long roadmapId, String roadmapTitle, Long subjectId, String subjectTitle, Long moduleId, String moduleTitle, Long topicId, String topicTitle, String title, String description, LocalDate assignedDate, LocalDate dueDate, Integer estimatedDurationMinutes, String priority, String status, LocalDateTime completedAt,  String proofType,
+                   String proofUrl,
+                   LocalDateTime submittedAt,
+                   LocalDateTime verifiedAt,
+                   String adminMessage, LocalDateTime createdAt) {
         this.id = id;
         this.studentId = studentId;
         this.studentName = studentName;
@@ -47,6 +56,11 @@ public class TaskDto {
         this.priority = priority;
         this.status = status;
         this.completedAt = completedAt;
+        this.proofType = proofType;
+        this.proofUrl = proofUrl;
+        this.submittedAt = submittedAt;
+        this.verifiedAt = verifiedAt;
+        this.adminMessage = adminMessage;
         this.createdAt = createdAt;
     }
 
@@ -210,6 +224,46 @@ public class TaskDto {
         this.createdAt = createdAt;
     }
 
+    public String getProofType() {
+        return proofType;
+    }
+
+    public void setProofType(String proofType) {
+        this.proofType = proofType;
+    }
+
+    public String getProofUrl() {
+        return proofUrl;
+    }
+
+    public void setProofUrl(String proofUrl) {
+        this.proofUrl = proofUrl;
+    }
+
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(LocalDateTime submittedAt) {
+        this.submittedAt = submittedAt;
+    }
+
+    public LocalDateTime getVerifiedAt() {
+        return verifiedAt;
+    }
+
+    public void setVerifiedAt(LocalDateTime verifiedAt) {
+        this.verifiedAt = verifiedAt;
+    }
+
+    public String getAdminMessage() {
+        return adminMessage;
+    }
+
+    public void setAdminMessage(String adminMessage) {
+        this.adminMessage = adminMessage;
+    }
+
 
     public static TaskDtoBuilder builder() {
         return new TaskDtoBuilder();
@@ -235,7 +289,14 @@ public class TaskDto {
         private String priority;
         private String status;
         private LocalDateTime completedAt;
+
+        private String proofType;
+        private String proofUrl;
+        private LocalDateTime submittedAt;
+        private LocalDateTime verifiedAt;
+        private String adminMessage;
         private LocalDateTime createdAt;
+
 
         public TaskDtoBuilder() {}
 
@@ -315,14 +376,63 @@ public class TaskDto {
             this.completedAt = completedAt;
             return this;
         }
+        public TaskDtoBuilder proofType(String proofType) {
+            this.proofType = proofType;
+            return this;
+        }
+
+        public TaskDtoBuilder proofUrl(String proofUrl) {
+            this.proofUrl = proofUrl;
+            return this;
+        }
+
+        public TaskDtoBuilder submittedAt(LocalDateTime submittedAt) {
+            this.submittedAt = submittedAt;
+            return this;
+        }
+
+        public TaskDtoBuilder verifiedAt(LocalDateTime verifiedAt) {
+            this.verifiedAt = verifiedAt;
+            return this;
+        }
+
+        public TaskDtoBuilder adminMessage(String adminMessage) {
+            this.adminMessage = adminMessage;
+            return this;
+        }
         public TaskDtoBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
         }
 
         public TaskDto build() {
-            return new TaskDto(this.id, this.studentId, this.studentName, this.roadmapId, this.roadmapTitle, this.subjectId, this.subjectTitle, this.moduleId, this.moduleTitle, this.topicId, this.topicTitle, this.title, this.description, this.assignedDate, this.dueDate, this.estimatedDurationMinutes, this.priority, this.status, this.completedAt, this.createdAt);
-        }
+            return new TaskDto(
+                    this.id,
+                    this.studentId,
+                    this.studentName,
+                    this.roadmapId,
+                    this.roadmapTitle,
+                    this.subjectId,
+                    this.subjectTitle,
+                    this.moduleId,
+                    this.moduleTitle,
+                    this.topicId,
+                    this.topicTitle,
+                    this.title,
+                    this.description,
+                    this.assignedDate,
+                    this.dueDate,
+                    this.estimatedDurationMinutes,
+                    this.priority,
+                    this.status,
+                    this.completedAt,
+                    this.proofType,
+                    this.proofUrl,
+                    this.submittedAt,
+                    this.verifiedAt,
+                    this.adminMessage,
+                    this.createdAt
+            );        }
     }
 
 }

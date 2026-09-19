@@ -3,5 +3,7 @@ package com.studytrack.entity;
 public enum TaskStatus {
     NOT_STARTED,
     IN_PROGRESS,
-    COMPLETED
+    PENDING_VERIFICATION,
+    COMPLETED,
+    REJECTED
 }
