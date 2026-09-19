@@ -223,7 +223,11 @@ public class TaskService {
 
         TaskProof taskProof = new TaskProof();
 
+        // IMPORTANT:
+        // Keep both old task_id relation and new submission_id relation.
+        taskProof.setTask(task);
         taskProof.setSubmission(submission);
+
         taskProof.setProofType(proofType.toUpperCase());
         taskProof.setProofUrl(proofUrl);
         taskProof.setUploadedAt(LocalDateTime.now());
@@ -289,7 +293,11 @@ public class TaskService {
 
             TaskProof taskProof = new TaskProof();
 
+            // IMPORTANT:
+            // Keep both old task_id relation and new submission_id relation.
+            taskProof.setTask(task);
             taskProof.setSubmission(submission);
+
             taskProof.setProofType(proofType.toUpperCase());
             taskProof.setProofUrl(proofUrl);
             taskProof.setUploadedAt(LocalDateTime.now());
