@@ -403,7 +403,72 @@ public class TaskService {
 
         taskRepository.save(task);
     }
+// ============================================================
+// ADMIN - DELETE TASK
+// ============================================================
 
+    @Transactional
+    public void deleteTask(Long taskId) {
+
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Task not found with id: " + taskId));
+
+        /*
+         * First delete all proofs.
+         *
+         * task_proofs has:
+         * 1. task_id -> tasks.id
+         * 2. submission_id -> task_submissions.id
+         *
+         * So proofs must be deleted first.
+         */
+        List<TaskSubmission> submissions =
+                taskSubmissionRepository
+                        .findByTaskOrderBySubmittedAtDesc(task);
+
+        for (TaskSubmission submission : submissions) {
+
+            List<TaskProof> proofs =
+                    taskProofRepository
+                            .findBySubmissionOrderByUploadedAtAsc(
+                                    submission);
+
+            if (!proofs.isEmpty()) {
+                taskProofRepository.deleteAll(proofs);
+            }
+        }
+
+        /*
+         * Delete any old proofs which may not have
+         * a submission relation.
+         */
+        List<TaskProof> taskProofs =
+                taskProofRepository.findAll()
+                        .stream()
+                        .filter(proof ->
+                                proof.getTask() != null &&
+                                        proof.getTask().getId()
+                                                .equals(taskId))
+                        .collect(Collectors.toList());
+
+        if (!taskProofs.isEmpty()) {
+            taskProofRepository.deleteAll(taskProofs);
+        }
+
+        /*
+         * Now delete submission history.
+         */
+        if (!submissions.isEmpty()) {
+            taskSubmissionRepository.deleteAll(submissions);
+        }
+
+        /*
+         * Finally delete the task.
+         */
+        taskRepository.delete(task);
+    }
     // ============================================================
     // ADMIN - DELETE TASK
     // ============================================================
