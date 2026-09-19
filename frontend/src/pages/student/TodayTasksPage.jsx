@@ -1017,19 +1017,121 @@ export default function TodayTasksPage() {
                       </div>
                   )}
 
-                  {/* Completed */}
-                  {isDone && (
+{/* Completed + Final Approved Proof */}
+{isDone && (
 
-                    <div className="ml-0 md:ml-12 flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200">
+  <div className="ml-0 md:ml-12 space-y-4">
 
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+    {/* Completed Message */}
+    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200">
 
-                      <p className="text-xs font-bold text-emerald-800">
-                        Task completed and verified by admin.
-                      </p>
+      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+
+      <p className="text-xs font-bold text-emerald-800">
+        Task completed and verified by admin.
+      </p>
+
+    </div>
+
+    {/* Final Approved Proof */}
+    {Array.isArray(task.proofs) &&
+      task.proofs.length > 0 && (
+
+        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+
+          <div className="flex items-center gap-2 mb-4">
+
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+
+            <div>
+              <h4 className="text-sm font-bold text-slate-800">
+                Final Approved Proof
+              </h4>
+
+              <p className="text-[11px] text-slate-500">
+                Your latest proof approved by admin.
+              </p>
+            </div>
+
+          </div>
+
+          {/* Proof Files */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {task.proofs.map((proof, index) => {
+
+              const proofUrl =
+                proof.proofUrl?.startsWith('http')
+                  ? proof.proofUrl
+                  : proof.proofUrl;
+
+              const isVideo =
+                proof.proofType?.toUpperCase() === 'VIDEO' ||
+                proof.proofUrl?.match(
+                  /\.(mp4|webm|mov|avi|mkv)(\?|$)/i
+                );
+
+              return (
+
+                <div
+                  key={proof.id || index}
+                  className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+                >
+
+                  {/* Video */}
+                  {isVideo ? (
+
+                    <video
+                      src={proofUrl}
+                      controls
+                      className="w-full max-h-[400px] object-contain bg-black"
+                    />
+
+                  ) : (
+
+                    /* Image */
+                    <img
+                      src={proofUrl}
+                      alt={`Approved proof ${index + 1}`}
+                      className="w-full max-h-[400px] object-contain bg-slate-100"
+                    />
+
+                  )}
+
+                  <div className="px-3 py-2 flex items-center justify-between">
+
+                    <div className="flex items-center gap-2">
+
+                      {isVideo ? (
+                        <Video className="w-4 h-4 text-indigo-600" />
+                      ) : (
+                        <ImageIcon className="w-4 h-4 text-indigo-600" />
+                      )}
+
+                      <span className="text-[11px] font-semibold text-slate-600">
+                        {isVideo ? 'Video Proof' : 'Image Proof'}
+                      </span>
 
                     </div>
-                  )}
+
+                    <span className="text-[10px] font-bold text-emerald-600">
+                      Approved
+                    </span>
+
+                  </div>
+
+                </div>
+
+              );
+            })}
+
+          </div>
+
+        </div>
+    )}
+
+  </div>
+)}
 
                 </div>
 
