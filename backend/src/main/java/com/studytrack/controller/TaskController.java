@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -41,9 +42,12 @@ public class TaskController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         List<TaskDto> tasks =
-                taskService.getTasksForStudent(userDetails.getUsername());
+                taskService.getTasksForStudent(
+                        userDetails.getUsername());
 
-        return ResponseEntity.ok(ApiResponse.ok(tasks));
+        return ResponseEntity.ok(
+                ApiResponse.ok(tasks)
+        );
     }
 
     @GetMapping("/api/student/tasks/today")
@@ -52,62 +56,84 @@ public class TaskController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         List<TaskDto> tasks =
-                taskService.getTodayTasksForStudent(userDetails.getUsername());
+                taskService.getTodayTasksForStudent(
+                        userDetails.getUsername());
 
-        return ResponseEntity.ok(ApiResponse.ok(tasks));
+        return ResponseEntity.ok(
+                ApiResponse.ok(tasks)
+        );
     }
 
     // =========================================================
-    // STUDENT - SUBMIT IMAGE / VIDEO PROOF
+    // STUDENT - SUBMIT MULTIPLE IMAGE / VIDEO PROOFS
     // =========================================================
 
     @PostMapping("/api/student/tasks/{id}/submit-proof")
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<ApiResponse<TaskDto>> submitTaskProof(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("files") MultipartFile[] files,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        if (file == null || file.isEmpty()) {
+        if (files == null || files.length == 0) {
             throw new IllegalArgumentException(
-                    "Image or video file is required"
+                    "At least one image or video file is required"
             );
         }
 
-        String contentType = file.getContentType();
+        List<String> proofTypes = new ArrayList<>();
+        List<String> proofUrls = new ArrayList<>();
 
-        if (contentType == null) {
-            throw new IllegalArgumentException(
-                    "File type could not be detected"
-            );
+        for (MultipartFile file : files) {
+
+            if (file == null || file.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "One of the selected files is empty"
+                );
+            }
+
+            String contentType = file.getContentType();
+
+            if (contentType == null) {
+                throw new IllegalArgumentException(
+                        "File type could not be detected"
+                );
+            }
+
+            String proofType;
+
+            if (contentType.startsWith("image/")) {
+                proofType = "IMAGE";
+
+            } else if (contentType.startsWith("video/")) {
+                proofType = "VIDEO";
+
+            } else {
+                throw new IllegalArgumentException(
+                        "Only image or video files are allowed"
+                );
+            }
+
+            // Upload file to Cloudinary
+            String proofUrl =
+                    fileStorageService.storeFile(file);
+
+            proofTypes.add(proofType);
+            proofUrls.add(proofUrl);
         }
 
-        String proofType;
-
-        if (contentType.startsWith("image/")) {
-            proofType = "IMAGE";
-        } else if (contentType.startsWith("video/")) {
-            proofType = "VIDEO";
-        } else {
-            throw new IllegalArgumentException(
-                    "Only image or video files are allowed"
-            );
-        }
-
-        // Save file
-        String proofUrl = fileStorageService.storeFile(file);
-
-        // Save proof details to task
-        TaskDto updated = taskService.submitTaskProof(
-                id,
-                proofType,
-                proofUrl,
-                userDetails.getUsername()
-        );
+        // Save all proofs for this task
+        TaskDto updated =
+                taskService.submitTaskProofs(
+                        id,
+                        proofTypes,
+                        proofUrls,
+                        userDetails.getUsername()
+                );
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
-                        "Proof uploaded and submitted for admin verification",
+                        "Proof files uploaded and submitted for admin verification",
                         updated
                 )
         );
@@ -126,9 +152,13 @@ public class TaskController {
             LocalDate date) {
 
         List<TaskDto> tasks =
-                taskService.getAllTasksForAdmin(studentId, date);
+                taskService.getAllTasksForAdmin(
+                        studentId,
+                        date);
 
-        return ResponseEntity.ok(ApiResponse.ok(tasks));
+        return ResponseEntity.ok(
+                ApiResponse.ok(tasks)
+        );
     }
 
     @GetMapping("/api/admin/tasks/pending-verification")
@@ -139,7 +169,9 @@ public class TaskController {
         List<TaskDto> tasks =
                 taskService.getPendingVerificationTasks();
 
-        return ResponseEntity.ok(ApiResponse.ok(tasks));
+        return ResponseEntity.ok(
+                ApiResponse.ok(tasks)
+        );
     }
 
     @PutMapping("/api/admin/tasks/{id}/approve")
@@ -165,7 +197,9 @@ public class TaskController {
             @RequestParam String adminMessage) {
 
         TaskDto updated =
-                taskService.rejectTask(id, adminMessage);
+                taskService.rejectTask(
+                        id,
+                        adminMessage);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(

@@ -1,71 +1,131 @@
 package com.studytrack.dto.task;
 
+import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class TaskDto {
+
     private Long id;
     private Long studentId;
     private String studentName;
+
     private Long roadmapId;
     private String roadmapTitle;
+
     private Long subjectId;
     private String subjectTitle;
+
     private Long moduleId;
     private String moduleTitle;
+
     private Long topicId;
     private String topicTitle;
+
     private String title;
     private String description;
+
     private LocalDate assignedDate;
     private LocalDate dueDate;
+
     private Integer estimatedDurationMinutes;
-    private String priority; // LOW, MEDIUM, HIGH
-    private String status;   // NOT_STARTED, IN_PROGRESS, COMPLETED
+
+    private String priority;
+    private String status;
+
     private LocalDateTime completedAt;
+
+    // Old single proof fields
     private String proofType;
     private String proofUrl;
+
+    // Multiple proofs
+    private List<TaskProofDto> proofs;
+
     private LocalDateTime submittedAt;
     private LocalDateTime verifiedAt;
     private String adminMessage;
+
     private LocalDateTime createdAt;
 
-    public TaskDto() {}
+    public TaskDto() {
+    }
 
-    public TaskDto(Long id, Long studentId, String studentName, Long roadmapId, String roadmapTitle, Long subjectId, String subjectTitle, Long moduleId, String moduleTitle, Long topicId, String topicTitle, String title, String description, LocalDate assignedDate, LocalDate dueDate, Integer estimatedDurationMinutes, String priority, String status, LocalDateTime completedAt,  String proofType,
-                   String proofUrl,
-                   LocalDateTime submittedAt,
-                   LocalDateTime verifiedAt,
-                   String adminMessage, LocalDateTime createdAt) {
+    public TaskDto(
+            Long id,
+            Long studentId,
+            String studentName,
+            Long roadmapId,
+            String roadmapTitle,
+            Long subjectId,
+            String subjectTitle,
+            Long moduleId,
+            String moduleTitle,
+            Long topicId,
+            String topicTitle,
+            String title,
+            String description,
+            LocalDate assignedDate,
+            LocalDate dueDate,
+            Integer estimatedDurationMinutes,
+            String priority,
+            String status,
+            LocalDateTime completedAt,
+            String proofType,
+            String proofUrl,
+            List<TaskProofDto> proofs,
+            LocalDateTime submittedAt,
+            LocalDateTime verifiedAt,
+            String adminMessage,
+            LocalDateTime createdAt) {
+
         this.id = id;
         this.studentId = studentId;
         this.studentName = studentName;
+
         this.roadmapId = roadmapId;
         this.roadmapTitle = roadmapTitle;
+
         this.subjectId = subjectId;
         this.subjectTitle = subjectTitle;
+
         this.moduleId = moduleId;
         this.moduleTitle = moduleTitle;
+
         this.topicId = topicId;
         this.topicTitle = topicTitle;
+
         this.title = title;
         this.description = description;
+
         this.assignedDate = assignedDate;
         this.dueDate = dueDate;
+
         this.estimatedDurationMinutes = estimatedDurationMinutes;
+
         this.priority = priority;
         this.status = status;
+
         this.completedAt = completedAt;
+
         this.proofType = proofType;
         this.proofUrl = proofUrl;
+
+        this.proofs = proofs;
+
         this.submittedAt = submittedAt;
         this.verifiedAt = verifiedAt;
         this.adminMessage = adminMessage;
+
         this.createdAt = createdAt;
     }
 
+    // ============================================================
+    // GETTERS AND SETTERS
+    // ============================================================
+
     public Long getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(Long id) {
@@ -73,7 +133,7 @@ public class TaskDto {
     }
 
     public Long getStudentId() {
-        return this.studentId;
+        return studentId;
     }
 
     public void setStudentId(Long studentId) {
@@ -81,7 +141,7 @@ public class TaskDto {
     }
 
     public String getStudentName() {
-        return this.studentName;
+        return studentName;
     }
 
     public void setStudentName(String studentName) {
@@ -89,7 +149,7 @@ public class TaskDto {
     }
 
     public Long getRoadmapId() {
-        return this.roadmapId;
+        return roadmapId;
     }
 
     public void setRoadmapId(Long roadmapId) {
@@ -97,7 +157,7 @@ public class TaskDto {
     }
 
     public String getRoadmapTitle() {
-        return this.roadmapTitle;
+        return roadmapTitle;
     }
 
     public void setRoadmapTitle(String roadmapTitle) {
@@ -105,7 +165,7 @@ public class TaskDto {
     }
 
     public Long getSubjectId() {
-        return this.subjectId;
+        return subjectId;
     }
 
     public void setSubjectId(Long subjectId) {
@@ -113,7 +173,7 @@ public class TaskDto {
     }
 
     public String getSubjectTitle() {
-        return this.subjectTitle;
+        return subjectTitle;
     }
 
     public void setSubjectTitle(String subjectTitle) {
@@ -121,7 +181,7 @@ public class TaskDto {
     }
 
     public Long getModuleId() {
-        return this.moduleId;
+        return moduleId;
     }
 
     public void setModuleId(Long moduleId) {
@@ -129,7 +189,7 @@ public class TaskDto {
     }
 
     public String getModuleTitle() {
-        return this.moduleTitle;
+        return moduleTitle;
     }
 
     public void setModuleTitle(String moduleTitle) {
@@ -137,7 +197,7 @@ public class TaskDto {
     }
 
     public Long getTopicId() {
-        return this.topicId;
+        return topicId;
     }
 
     public void setTopicId(Long topicId) {
@@ -145,7 +205,7 @@ public class TaskDto {
     }
 
     public String getTopicTitle() {
-        return this.topicTitle;
+        return topicTitle;
     }
 
     public void setTopicTitle(String topicTitle) {
@@ -153,7 +213,7 @@ public class TaskDto {
     }
 
     public String getTitle() {
-        return this.title;
+        return title;
     }
 
     public void setTitle(String title) {
@@ -161,7 +221,7 @@ public class TaskDto {
     }
 
     public String getDescription() {
-        return this.description;
+        return description;
     }
 
     public void setDescription(String description) {
@@ -169,7 +229,7 @@ public class TaskDto {
     }
 
     public LocalDate getAssignedDate() {
-        return this.assignedDate;
+        return assignedDate;
     }
 
     public void setAssignedDate(LocalDate assignedDate) {
@@ -177,7 +237,7 @@ public class TaskDto {
     }
 
     public LocalDate getDueDate() {
-        return this.dueDate;
+        return dueDate;
     }
 
     public void setDueDate(LocalDate dueDate) {
@@ -185,7 +245,7 @@ public class TaskDto {
     }
 
     public Integer getEstimatedDurationMinutes() {
-        return this.estimatedDurationMinutes;
+        return estimatedDurationMinutes;
     }
 
     public void setEstimatedDurationMinutes(Integer estimatedDurationMinutes) {
@@ -193,7 +253,7 @@ public class TaskDto {
     }
 
     public String getPriority() {
-        return this.priority;
+        return priority;
     }
 
     public void setPriority(String priority) {
@@ -201,7 +261,7 @@ public class TaskDto {
     }
 
     public String getStatus() {
-        return this.status;
+        return status;
     }
 
     public void setStatus(String status) {
@@ -209,19 +269,11 @@ public class TaskDto {
     }
 
     public LocalDateTime getCompletedAt() {
-        return this.completedAt;
+        return completedAt;
     }
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return this.createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public String getProofType() {
@@ -238,6 +290,14 @@ public class TaskDto {
 
     public void setProofUrl(String proofUrl) {
         this.proofUrl = proofUrl;
+    }
+
+    public List<TaskProofDto> getProofs() {
+        return proofs;
+    }
+
+    public void setProofs(List<TaskProofDto> proofs) {
+        this.proofs = proofs;
     }
 
     public LocalDateTime getSubmittedAt() {
@@ -264,118 +324,164 @@ public class TaskDto {
         this.adminMessage = adminMessage;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    // ============================================================
+    // BUILDER
+    // ============================================================
 
     public static TaskDtoBuilder builder() {
         return new TaskDtoBuilder();
     }
 
     public static class TaskDtoBuilder {
+
         private Long id;
         private Long studentId;
         private String studentName;
+
         private Long roadmapId;
         private String roadmapTitle;
+
         private Long subjectId;
         private String subjectTitle;
+
         private Long moduleId;
         private String moduleTitle;
+
         private Long topicId;
         private String topicTitle;
+
         private String title;
         private String description;
+
         private LocalDate assignedDate;
         private LocalDate dueDate;
+
         private Integer estimatedDurationMinutes;
+
         private String priority;
         private String status;
+
         private LocalDateTime completedAt;
 
         private String proofType;
         private String proofUrl;
+
+        private List<TaskProofDto> proofs;
+
         private LocalDateTime submittedAt;
         private LocalDateTime verifiedAt;
         private String adminMessage;
+
         private LocalDateTime createdAt;
 
-
-        public TaskDtoBuilder() {}
+        public TaskDtoBuilder() {
+        }
 
         public TaskDtoBuilder id(Long id) {
             this.id = id;
             return this;
         }
+
         public TaskDtoBuilder studentId(Long studentId) {
             this.studentId = studentId;
             return this;
         }
+
         public TaskDtoBuilder studentName(String studentName) {
             this.studentName = studentName;
             return this;
         }
+
         public TaskDtoBuilder roadmapId(Long roadmapId) {
             this.roadmapId = roadmapId;
             return this;
         }
+
         public TaskDtoBuilder roadmapTitle(String roadmapTitle) {
             this.roadmapTitle = roadmapTitle;
             return this;
         }
+
         public TaskDtoBuilder subjectId(Long subjectId) {
             this.subjectId = subjectId;
             return this;
         }
+
         public TaskDtoBuilder subjectTitle(String subjectTitle) {
             this.subjectTitle = subjectTitle;
             return this;
         }
+
         public TaskDtoBuilder moduleId(Long moduleId) {
             this.moduleId = moduleId;
             return this;
         }
+
         public TaskDtoBuilder moduleTitle(String moduleTitle) {
             this.moduleTitle = moduleTitle;
             return this;
         }
+
         public TaskDtoBuilder topicId(Long topicId) {
             this.topicId = topicId;
             return this;
         }
+
         public TaskDtoBuilder topicTitle(String topicTitle) {
             this.topicTitle = topicTitle;
             return this;
         }
+
         public TaskDtoBuilder title(String title) {
             this.title = title;
             return this;
         }
+
         public TaskDtoBuilder description(String description) {
             this.description = description;
             return this;
         }
+
         public TaskDtoBuilder assignedDate(LocalDate assignedDate) {
             this.assignedDate = assignedDate;
             return this;
         }
+
         public TaskDtoBuilder dueDate(LocalDate dueDate) {
             this.dueDate = dueDate;
             return this;
         }
-        public TaskDtoBuilder estimatedDurationMinutes(Integer estimatedDurationMinutes) {
+
+        public TaskDtoBuilder estimatedDurationMinutes(
+                Integer estimatedDurationMinutes) {
             this.estimatedDurationMinutes = estimatedDurationMinutes;
             return this;
         }
+
         public TaskDtoBuilder priority(String priority) {
             this.priority = priority;
             return this;
         }
+
         public TaskDtoBuilder status(String status) {
             this.status = status;
             return this;
         }
-        public TaskDtoBuilder completedAt(LocalDateTime completedAt) {
+
+        public TaskDtoBuilder completedAt(
+                LocalDateTime completedAt) {
             this.completedAt = completedAt;
             return this;
         }
+
         public TaskDtoBuilder proofType(String proofType) {
             this.proofType = proofType;
             return this;
@@ -386,26 +492,38 @@ public class TaskDto {
             return this;
         }
 
-        public TaskDtoBuilder submittedAt(LocalDateTime submittedAt) {
+        public TaskDtoBuilder proofs(
+                List<TaskProofDto> proofs) {
+            this.proofs = proofs;
+            return this;
+        }
+
+        public TaskDtoBuilder submittedAt(
+                LocalDateTime submittedAt) {
             this.submittedAt = submittedAt;
             return this;
         }
 
-        public TaskDtoBuilder verifiedAt(LocalDateTime verifiedAt) {
+        public TaskDtoBuilder verifiedAt(
+                LocalDateTime verifiedAt) {
             this.verifiedAt = verifiedAt;
             return this;
         }
 
-        public TaskDtoBuilder adminMessage(String adminMessage) {
+        public TaskDtoBuilder adminMessage(
+                String adminMessage) {
             this.adminMessage = adminMessage;
             return this;
         }
-        public TaskDtoBuilder createdAt(LocalDateTime createdAt) {
+
+        public TaskDtoBuilder createdAt(
+                LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
         }
 
         public TaskDto build() {
+
             return new TaskDto(
                     this.id,
                     this.studentId,
@@ -428,11 +546,12 @@ public class TaskDto {
                     this.completedAt,
                     this.proofType,
                     this.proofUrl,
+                    this.proofs,
                     this.submittedAt,
                     this.verifiedAt,
                     this.adminMessage,
                     this.createdAt
-            );        }
+            );
+        }
     }
-
 }

@@ -2,7 +2,7 @@ package com.studytrack.service;
 
 import com.studytrack.dto.task.CreateTaskRequest;
 import com.studytrack.dto.task.TaskDto;
-import com.studytrack.dto.task.UpdateTaskStatusRequest;
+import com.studytrack.dto.task.TaskProofDto;
 import com.studytrack.entity.*;
 import com.studytrack.exception.ResourceNotFoundException;
 import com.studytrack.exception.UnauthorizedException;
@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final TaskProofRepository taskProofRepository;
     private final StudentRepository studentRepository;
     private final RoadmapRepository roadmapRepository;
     private final SubjectRepository subjectRepository;
@@ -30,6 +31,7 @@ public class TaskService {
 
     public TaskService(
             TaskRepository taskRepository,
+            TaskProofRepository taskProofRepository,
             StudentRepository studentRepository,
             RoadmapRepository roadmapRepository,
             SubjectRepository subjectRepository,
@@ -40,6 +42,7 @@ public class TaskService {
             StudentService studentService) {
 
         this.taskRepository = taskRepository;
+        this.taskProofRepository = taskProofRepository;
         this.studentRepository = studentRepository;
         this.roadmapRepository = roadmapRepository;
         this.subjectRepository = subjectRepository;
@@ -50,13 +53,18 @@ public class TaskService {
         this.studentService = studentService;
     }
 
+    // ============================================================
+    // CREATE TASK
+    // ============================================================
+
     @Transactional
     public TaskDto createTask(CreateTaskRequest request) {
 
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Student not found with id: " + request.getStudentId()));
+                                "Student not found with id: "
+                                        + request.getStudentId()));
 
         Roadmap roadmap = request.getRoadmapId() != null
                 ? roadmapRepository.findById(request.getRoadmapId()).orElse(null)
@@ -108,7 +116,9 @@ public class TaskService {
         Notification notification = Notification.builder()
                 .student(student)
                 .title("New Task Assigned")
-                .message("A new task has been assigned: " + task.getTitle())
+                .message(
+                        "A new task has been assigned: "
+                                + task.getTitle())
                 .type(NotificationType.TASK_ASSIGNED)
                 .build();
 
@@ -116,6 +126,10 @@ public class TaskService {
 
         return toDto(task);
     }
+
+    // ============================================================
+    // STUDENT - GET ALL TASKS
+    // ============================================================
 
     @Transactional(readOnly = true)
     public List<TaskDto> getTasksForStudent(String studentEmail) {
@@ -126,17 +140,27 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
 
+    // ============================================================
+    // STUDENT - GET TODAY TASKS
+    // ============================================================
+
     @Transactional(readOnly = true)
     public List<TaskDto> getTodayTasksForStudent(String studentEmail) {
 
         LocalDate today = LocalDate.now();
 
         return taskRepository
-                .findByStudentEmailAndAssignedDate(studentEmail, today)
+                .findByStudentEmailAndAssignedDate(
+                        studentEmail,
+                        today)
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
+
+    // ============================================================
+    // ADMIN - GET ALL TASKS
+    // ============================================================
 
     @Transactional(readOnly = true)
     public List<TaskDto> getAllTasksForAdmin(
@@ -148,12 +172,15 @@ public class TaskService {
         if (studentId != null && date != null) {
 
             tasks = taskRepository
-                    .findByStudentIdAndAssignedDate(studentId, date);
+                    .findByStudentIdAndAssignedDate(
+                            studentId,
+                            date);
 
         } else if (studentId != null) {
 
             tasks = taskRepository
-                    .findByStudentIdOrderByAssignedDateDesc(studentId);
+                    .findByStudentIdOrderByAssignedDateDesc(
+                            studentId);
 
         } else {
 
@@ -166,7 +193,7 @@ public class TaskService {
     }
 
     // ============================================================
-    // STUDENT - SUBMIT PROOF
+    // STUDENT - SUBMIT SINGLE PROOF
     // ============================================================
 
     @Transactional
@@ -181,13 +208,132 @@ public class TaskService {
                         new ResourceNotFoundException(
                                 "Task not found with id: " + taskId));
 
+        validateStudentTask(task, studentEmail);
+
+        validateProof(proofType, proofUrl);
+
+        TaskProof taskProof = new TaskProof();
+
+        taskProof.setTask(task);
+        taskProof.setProofType(proofType.toUpperCase());
+        taskProof.setProofUrl(proofUrl);
+        taskProof.setUploadedAt(LocalDateTime.now());
+
+        taskProofRepository.save(taskProof);
+
+        updateTaskAfterProofSubmission(task);
+
+        return toDto(task);
+    }
+
+    // ============================================================
+    // STUDENT - SUBMIT MULTIPLE PROOFS
+    // ============================================================
+
+    @Transactional
+    public TaskDto submitTaskProofs(
+            Long taskId,
+            List<String> proofTypes,
+            List<String> proofUrls,
+            String studentEmail) {
+
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Task not found with id: " + taskId));
+
+        validateStudentTask(task, studentEmail);
+
+        if (proofTypes == null || proofTypes.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "At least one proof is required");
+        }
+
+        if (proofUrls == null || proofUrls.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "At least one proof file is required");
+        }
+
+        if (proofTypes.size() != proofUrls.size()) {
+            throw new IllegalArgumentException(
+                    "Proof type and proof URL count must match");
+        }
+
+        /*
+         * If task was rejected, remove the old proof files.
+         * The new submission becomes the current proof set.
+         */
+        if (task.getStatus() == TaskStatus.REJECTED) {
+            List<TaskProof> oldProofs =
+                    taskProofRepository.findByTask(task);
+
+            if (!oldProofs.isEmpty()) {
+                taskProofRepository.deleteAll(oldProofs);
+            }
+        }
+
+        /*
+         * A task already waiting for admin verification
+         * should not receive another submission.
+         */
+        if (task.getStatus() == TaskStatus.PENDING_VERIFICATION) {
+            throw new IllegalStateException(
+                    "Task is already waiting for admin verification");
+        }
+
+        if (task.getStatus() == TaskStatus.COMPLETED) {
+            throw new IllegalStateException(
+                    "Completed task cannot be submitted again");
+        }
+
+        for (int i = 0; i < proofTypes.size(); i++) {
+
+            String proofType = proofTypes.get(i);
+            String proofUrl = proofUrls.get(i);
+
+            validateProof(proofType, proofUrl);
+
+            TaskProof taskProof = new TaskProof();
+
+            taskProof.setTask(task);
+            taskProof.setProofType(proofType.toUpperCase());
+            taskProof.setProofUrl(proofUrl);
+            taskProof.setUploadedAt(LocalDateTime.now());
+
+            taskProofRepository.save(taskProof);
+        }
+
+        updateTaskAfterProofSubmission(task);
+
+        return toDto(task);
+    }
+
+    // ============================================================
+    // VALIDATE STUDENT TASK
+    // ============================================================
+
+    private void validateStudentTask(
+            Task task,
+            String studentEmail) {
+
         if (studentEmail != null &&
-                !task.getStudent().getUser().getEmail()
+                !task.getStudent()
+                        .getUser()
+                        .getEmail()
                         .equals(studentEmail)) {
 
             throw new UnauthorizedException(
                     "You do not have permission to submit proof for this task");
         }
+    }
+
+    // ============================================================
+    // VALIDATE PROOF
+    // ============================================================
+
+    private void validateProof(
+            String proofType,
+            String proofUrl) {
 
         if (proofType == null || proofType.isBlank()) {
             throw new IllegalArgumentException(
@@ -205,20 +351,21 @@ public class TaskService {
             throw new IllegalArgumentException(
                     "Proof must be an image or video");
         }
+    }
 
-        task.setProofType(proofType.toUpperCase());
-        task.setProofUrl(proofUrl);
+    // ============================================================
+    // UPDATE TASK AFTER PROOF SUBMISSION
+    // ============================================================
+
+    private void updateTaskAfterProofSubmission(Task task) {
+
         task.setSubmittedAt(LocalDateTime.now());
-
-        // Uploading proof does NOT mean completed
         task.setStatus(TaskStatus.PENDING_VERIFICATION);
         task.setCompletedAt(null);
         task.setVerifiedAt(null);
         task.setAdminMessage(null);
 
-        task = taskRepository.save(task);
-
-        return toDto(task);
+        taskRepository.save(task);
     }
 
     // ============================================================
@@ -368,6 +515,21 @@ public class TaskService {
 
     public TaskDto toDto(Task t) {
 
+        List<TaskProofDto> proofs =
+                taskProofRepository.findByTask(t)
+                        .stream()
+                        .map(proof -> {
+                            TaskProofDto proofDto = new TaskProofDto();
+
+                            proofDto.setId(proof.getId());
+                            proofDto.setProofType(proof.getProofType());
+                            proofDto.setProofUrl(proof.getProofUrl());
+                            proofDto.setUploadedAt(proof.getUploadedAt());
+
+                            return proofDto;
+                        })
+                        .collect(Collectors.toList());
+
         return TaskDto.builder()
                 .id(t.getId())
                 .studentId(t.getStudent().getId())
@@ -418,6 +580,7 @@ public class TaskService {
                 .description(t.getDescription())
                 .assignedDate(t.getAssignedDate())
                 .dueDate(t.getDueDate())
+
                 .estimatedDurationMinutes(
                         t.getEstimatedDurationMinutes())
 
@@ -425,11 +588,13 @@ public class TaskService {
                 .status(t.getStatus().name())
 
                 .completedAt(t.getCompletedAt())
-                .proofType(t.getProofType())
-                .proofUrl(t.getProofUrl())
+
                 .submittedAt(t.getSubmittedAt())
                 .verifiedAt(t.getVerifiedAt())
                 .adminMessage(t.getAdminMessage())
+
+                .proofs(proofs)
+
                 .createdAt(t.getCreatedAt())
 
                 .build();
