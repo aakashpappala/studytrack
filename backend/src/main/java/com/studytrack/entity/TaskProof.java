@@ -13,8 +13,8 @@ public class TaskProof {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
-    private Task task;
+    @JoinColumn(name = "submission_id", nullable = false)
+    private TaskSubmission submission;
 
     @Column(nullable = false)
     private String proofType;
@@ -29,13 +29,13 @@ public class TaskProof {
 
     public TaskProof(
             Long id,
-            Task task,
+            TaskSubmission submission,
             String proofType,
             String proofUrl,
             LocalDateTime uploadedAt) {
 
         this.id = id;
-        this.task = task;
+        this.submission = submission;
         this.proofType = proofType;
         this.proofUrl = proofUrl;
         this.uploadedAt = uploadedAt;
@@ -49,12 +49,12 @@ public class TaskProof {
         this.id = id;
     }
 
-    public Task getTask() {
-        return task;
+    public TaskSubmission getSubmission() {
+        return submission;
     }
 
-    public void setTask(Task task) {
-        this.task = task;
+    public void setSubmission(TaskSubmission submission) {
+        this.submission = submission;
     }
 
     public String getProofType() {

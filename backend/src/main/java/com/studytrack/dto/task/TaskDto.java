@@ -39,8 +39,11 @@ public class TaskDto {
     private String proofType;
     private String proofUrl;
 
-    // Multiple proofs
+    // Current/latest submission proofs
     private List<TaskProofDto> proofs;
+
+    // Complete submission history
+    private List<TaskSubmissionDto> submissionHistory;
 
     private LocalDateTime submittedAt;
     private LocalDateTime verifiedAt;
@@ -74,6 +77,7 @@ public class TaskDto {
             String proofType,
             String proofUrl,
             List<TaskProofDto> proofs,
+            List<TaskSubmissionDto> submissionHistory,
             LocalDateTime submittedAt,
             LocalDateTime verifiedAt,
             String adminMessage,
@@ -112,6 +116,7 @@ public class TaskDto {
         this.proofUrl = proofUrl;
 
         this.proofs = proofs;
+        this.submissionHistory = submissionHistory;
 
         this.submittedAt = submittedAt;
         this.verifiedAt = verifiedAt;
@@ -300,6 +305,16 @@ public class TaskDto {
         this.proofs = proofs;
     }
 
+    public List<TaskSubmissionDto> getSubmissionHistory() {
+        return submissionHistory;
+    }
+
+    public void setSubmissionHistory(
+            List<TaskSubmissionDto> submissionHistory) {
+
+        this.submissionHistory = submissionHistory;
+    }
+
     public LocalDateTime getSubmittedAt() {
         return submittedAt;
     }
@@ -375,6 +390,8 @@ public class TaskDto {
         private String proofUrl;
 
         private List<TaskProofDto> proofs;
+
+        private List<TaskSubmissionDto> submissionHistory;
 
         private LocalDateTime submittedAt;
         private LocalDateTime verifiedAt;
@@ -462,7 +479,10 @@ public class TaskDto {
 
         public TaskDtoBuilder estimatedDurationMinutes(
                 Integer estimatedDurationMinutes) {
-            this.estimatedDurationMinutes = estimatedDurationMinutes;
+
+            this.estimatedDurationMinutes =
+                    estimatedDurationMinutes;
+
             return this;
         }
 
@@ -478,7 +498,9 @@ public class TaskDto {
 
         public TaskDtoBuilder completedAt(
                 LocalDateTime completedAt) {
+
             this.completedAt = completedAt;
+
             return this;
         }
 
@@ -494,31 +516,49 @@ public class TaskDto {
 
         public TaskDtoBuilder proofs(
                 List<TaskProofDto> proofs) {
+
             this.proofs = proofs;
+
+            return this;
+        }
+
+        public TaskDtoBuilder submissionHistory(
+                List<TaskSubmissionDto> submissionHistory) {
+
+            this.submissionHistory = submissionHistory;
+
             return this;
         }
 
         public TaskDtoBuilder submittedAt(
                 LocalDateTime submittedAt) {
+
             this.submittedAt = submittedAt;
+
             return this;
         }
 
         public TaskDtoBuilder verifiedAt(
                 LocalDateTime verifiedAt) {
+
             this.verifiedAt = verifiedAt;
+
             return this;
         }
 
         public TaskDtoBuilder adminMessage(
                 String adminMessage) {
+
             this.adminMessage = adminMessage;
+
             return this;
         }
 
         public TaskDtoBuilder createdAt(
                 LocalDateTime createdAt) {
+
             this.createdAt = createdAt;
+
             return this;
         }
 
@@ -547,6 +587,7 @@ public class TaskDto {
                     this.proofType,
                     this.proofUrl,
                     this.proofs,
+                    this.submissionHistory,
                     this.submittedAt,
                     this.verifiedAt,
                     this.adminMessage,

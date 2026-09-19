@@ -3,6 +3,7 @@ package com.studytrack.service;
 import com.studytrack.dto.task.CreateTaskRequest;
 import com.studytrack.dto.task.TaskDto;
 import com.studytrack.dto.task.TaskProofDto;
+import com.studytrack.dto.task.TaskSubmissionDto;
 import com.studytrack.entity.*;
 import com.studytrack.exception.ResourceNotFoundException;
 import com.studytrack.exception.UnauthorizedException;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,7 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskProofRepository taskProofRepository;
+    private final TaskSubmissionRepository taskSubmissionRepository;
     private final StudentRepository studentRepository;
     private final RoadmapRepository roadmapRepository;
     private final SubjectRepository subjectRepository;
@@ -32,6 +35,7 @@ public class TaskService {
     public TaskService(
             TaskRepository taskRepository,
             TaskProofRepository taskProofRepository,
+            TaskSubmissionRepository taskSubmissionRepository,
             StudentRepository studentRepository,
             RoadmapRepository roadmapRepository,
             SubjectRepository subjectRepository,
@@ -43,6 +47,7 @@ public class TaskService {
 
         this.taskRepository = taskRepository;
         this.taskProofRepository = taskProofRepository;
+        this.taskSubmissionRepository = taskSubmissionRepository;
         this.studentRepository = studentRepository;
         this.roadmapRepository = roadmapRepository;
         this.subjectRepository = subjectRepository;
@@ -210,11 +215,15 @@ public class TaskService {
 
         validateStudentTask(task, studentEmail);
 
+        validateTaskCanReceiveSubmission(task);
+
         validateProof(proofType, proofUrl);
+
+        TaskSubmission submission = createSubmission(task);
 
         TaskProof taskProof = new TaskProof();
 
-        taskProof.setTask(task);
+        taskProof.setSubmission(submission);
         taskProof.setProofType(proofType.toUpperCase());
         taskProof.setProofUrl(proofUrl);
         taskProof.setUploadedAt(LocalDateTime.now());
@@ -259,32 +268,17 @@ public class TaskService {
                     "Proof type and proof URL count must match");
         }
 
-        /*
-         * If task was rejected, remove the old proof files.
-         * The new submission becomes the current proof set.
-         */
-        if (task.getStatus() == TaskStatus.REJECTED) {
-            List<TaskProof> oldProofs =
-                    taskProofRepository.findByTask(task);
-
-            if (!oldProofs.isEmpty()) {
-                taskProofRepository.deleteAll(oldProofs);
-            }
-        }
+        validateTaskCanReceiveSubmission(task);
 
         /*
-         * A task already waiting for admin verification
-         * should not receive another submission.
+         * IMPORTANT:
+         *
+         * We DO NOT delete old submissions/proofs.
+         *
+         * Every new submission gets its own TaskSubmission row.
+         * This preserves complete submission history.
          */
-        if (task.getStatus() == TaskStatus.PENDING_VERIFICATION) {
-            throw new IllegalStateException(
-                    "Task is already waiting for admin verification");
-        }
-
-        if (task.getStatus() == TaskStatus.COMPLETED) {
-            throw new IllegalStateException(
-                    "Completed task cannot be submitted again");
-        }
+        TaskSubmission submission = createSubmission(task);
 
         for (int i = 0; i < proofTypes.size(); i++) {
 
@@ -295,7 +289,7 @@ public class TaskService {
 
             TaskProof taskProof = new TaskProof();
 
-            taskProof.setTask(task);
+            taskProof.setSubmission(submission);
             taskProof.setProofType(proofType.toUpperCase());
             taskProof.setProofUrl(proofUrl);
             taskProof.setUploadedAt(LocalDateTime.now());
@@ -306,6 +300,23 @@ public class TaskService {
         updateTaskAfterProofSubmission(task);
 
         return toDto(task);
+    }
+
+    // ============================================================
+    // CREATE SUBMISSION
+    // ============================================================
+
+    private TaskSubmission createSubmission(Task task) {
+
+        TaskSubmission submission = new TaskSubmission();
+
+        submission.setTask(task);
+        submission.setStatus(TaskStatus.PENDING_VERIFICATION);
+        submission.setSubmittedAt(LocalDateTime.now());
+        submission.setVerifiedAt(null);
+        submission.setAdminMessage(null);
+
+        return taskSubmissionRepository.save(submission);
     }
 
     // ============================================================
@@ -324,6 +335,23 @@ public class TaskService {
 
             throw new UnauthorizedException(
                     "You do not have permission to submit proof for this task");
+        }
+    }
+
+    // ============================================================
+    // VALIDATE TASK SUBMISSION STATUS
+    // ============================================================
+
+    private void validateTaskCanReceiveSubmission(Task task) {
+
+        if (task.getStatus() == TaskStatus.PENDING_VERIFICATION) {
+            throw new IllegalStateException(
+                    "Task is already waiting for admin verification");
+        }
+
+        if (task.getStatus() == TaskStatus.COMPLETED) {
+            throw new IllegalStateException(
+                    "Completed task cannot be submitted again");
         }
     }
 
@@ -383,6 +411,21 @@ public class TaskService {
     }
 
     // ============================================================
+    // GET LATEST SUBMISSION
+    // ============================================================
+
+    private TaskSubmission getLatestSubmission(Task task) {
+
+        return taskSubmissionRepository
+                .findByTaskOrderBySubmittedAtDesc(task)
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "No submission found for this task"));
+    }
+
+    // ============================================================
     // ADMIN - APPROVE TASK
     // ============================================================
 
@@ -398,6 +441,14 @@ public class TaskService {
             throw new IllegalStateException(
                     "Only pending verification tasks can be approved");
         }
+
+        TaskSubmission submission = getLatestSubmission(task);
+
+        submission.setStatus(TaskStatus.COMPLETED);
+        submission.setVerifiedAt(LocalDateTime.now());
+        submission.setAdminMessage("Task approved by admin");
+
+        taskSubmissionRepository.save(submission);
 
         task.setStatus(TaskStatus.COMPLETED);
         task.setCompletedAt(LocalDateTime.now());
@@ -443,6 +494,14 @@ public class TaskService {
             throw new IllegalArgumentException(
                     "Admin message is required when rejecting a task");
         }
+
+        TaskSubmission submission = getLatestSubmission(task);
+
+        submission.setStatus(TaskStatus.REJECTED);
+        submission.setVerifiedAt(LocalDateTime.now());
+        submission.setAdminMessage(adminMessage);
+
+        taskSubmissionRepository.save(submission);
 
         task.setStatus(TaskStatus.REJECTED);
         task.setVerifiedAt(LocalDateTime.now());
@@ -513,28 +572,55 @@ public class TaskService {
     // DTO CONVERSION
     // ============================================================
 
+    @Transactional(readOnly = true)
     public TaskDto toDto(Task t) {
 
-        List<TaskProofDto> proofs =
-                taskProofRepository.findByTask(t)
+        // --------------------------------------------------------
+        // ALL SUBMISSION HISTORY
+        // --------------------------------------------------------
+
+        List<TaskSubmissionDto> submissionHistory =
+                taskSubmissionRepository
+                        .findByTaskOrderBySubmittedAtDesc(t)
                         .stream()
-                        .map(proof -> {
-                            TaskProofDto proofDto = new TaskProofDto();
-
-                            proofDto.setId(proof.getId());
-                            proofDto.setProofType(proof.getProofType());
-                            proofDto.setProofUrl(proof.getProofUrl());
-                            proofDto.setUploadedAt(proof.getUploadedAt());
-
-                            return proofDto;
-                        })
+                        .map(this::toSubmissionDto)
                         .collect(Collectors.toList());
+
+        // --------------------------------------------------------
+        // CURRENT/LATEST SUBMISSION PROOFS
+        // --------------------------------------------------------
+
+        List<TaskProofDto> proofs = new ArrayList<>();
+
+        if (!submissionHistory.isEmpty()) {
+
+            TaskSubmission latestSubmission =
+                    taskSubmissionRepository
+                            .findByTaskOrderBySubmittedAtDesc(t)
+                            .stream()
+                            .findFirst()
+                            .orElse(null);
+
+            if (latestSubmission != null) {
+
+                proofs = taskProofRepository
+                        .findBySubmissionOrderByUploadedAtAsc(
+                                latestSubmission)
+                        .stream()
+                        .map(this::toProofDto)
+                        .collect(Collectors.toList());
+            }
+        }
 
         return TaskDto.builder()
                 .id(t.getId())
+
                 .studentId(t.getStudent().getId())
+
                 .studentName(
-                        t.getStudent().getUser().getFullName())
+                        t.getStudent()
+                                .getUser()
+                                .getFullName())
 
                 .roadmapId(
                         t.getRoadmap() != null
@@ -578,6 +664,7 @@ public class TaskService {
 
                 .title(t.getTitle())
                 .description(t.getDescription())
+
                 .assignedDate(t.getAssignedDate())
                 .dueDate(t.getDueDate())
 
@@ -595,8 +682,64 @@ public class TaskService {
 
                 .proofs(proofs)
 
+                .submissionHistory(submissionHistory)
+
                 .createdAt(t.getCreatedAt())
 
                 .build();
+    }
+
+    // ============================================================
+    // SUBMISSION DTO CONVERSION
+    // ============================================================
+
+    private TaskSubmissionDto toSubmissionDto(
+            TaskSubmission submission) {
+
+        List<TaskProofDto> proofs =
+                taskProofRepository
+                        .findBySubmissionOrderByUploadedAtAsc(
+                                submission)
+                        .stream()
+                        .map(this::toProofDto)
+                        .collect(Collectors.toList());
+
+        TaskSubmissionDto dto = new TaskSubmissionDto();
+
+        dto.setId(submission.getId());
+
+        dto.setStatus(
+                submission.getStatus() != null
+                        ? submission.getStatus().name()
+                        : null);
+
+        dto.setSubmittedAt(
+                submission.getSubmittedAt());
+
+        dto.setVerifiedAt(
+                submission.getVerifiedAt());
+
+        dto.setAdminMessage(
+                submission.getAdminMessage());
+
+        dto.setProofs(proofs);
+
+        return dto;
+    }
+
+    // ============================================================
+    // PROOF DTO CONVERSION
+    // ============================================================
+
+    private TaskProofDto toProofDto(TaskProof proof) {
+
+        TaskProofDto dto = new TaskProofDto();
+
+        dto.setId(proof.getId());
+        dto.setProofType(proof.getProofType());
+        dto.setProofUrl(proof.getProofUrl());
+        dto.setUploadedAt(proof.getUploadedAt());
+
+        return dto;
     }
 }
