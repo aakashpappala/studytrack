@@ -16,7 +16,8 @@ import {
   AlertCircle,
   History,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -196,6 +197,33 @@ export default function AdminTasksPage() {
       );
     } finally {
       setVerificationLoading(false);
+    }
+  };
+
+  // ============================================================
+  // DELETE TASK
+  // ============================================================
+
+  const handleDeleteTask = async (taskId, taskTitle) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the task "${taskTitle || "this task"}"? This will also delete its submission history and proofs.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/admin/tasks/${taskId}`);
+
+      await fetchTasksAndStudents();
+
+      alert('Task deleted successfully.');
+    } catch (err) {
+      console.error('Error deleting task', err);
+
+      alert(
+        err?.response?.data?.message ||
+        'Failed to delete task.'
+      );
     }
   };
 
@@ -941,21 +969,36 @@ export default function AdminTasksPage() {
 
                       <td className="py-4 px-6 text-right">
 
-                        {hasHistory ? (
+                        <div className="flex items-center justify-end gap-2">
+
+                          {hasHistory ? (
+                            <button
+                              onClick={() =>
+                                openHistoryModal(t)
+                              }
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold transition-colors"
+                            >
+                              <History className="w-3.5 h-3.5" />
+                              View History
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-slate-400">
+                              No submissions
+                            </span>
+                          )}
+
                           <button
+                            type="button"
                             onClick={() =>
-                              openHistoryModal(t)
+                              handleDeleteTask(t.id, t.title)
                             }
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold transition-colors"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors"
+                            title="Delete task"
                           >
-                            <History className="w-3.5 h-3.5" />
-                            View History
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        ) : (
-                          <span className="text-[10px] text-slate-400">
-                            No submissions
-                          </span>
-                        )}
+
+                        </div>
 
                       </td>
 
