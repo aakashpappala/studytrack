@@ -1,21 +1,21 @@
 package com.studytrack.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
+import java.util.Map;
 
 @Service
 public class FileStorageService {
 
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir;
+    private final Cloudinary cloudinary;
+
+    public FileStorageService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
+    }
 
     public String storeFile(MultipartFile file) {
 
@@ -35,38 +35,36 @@ public class FileStorageService {
         }
 
         try {
-            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
 
-            Files.createDirectories(uploadPath);
+            String resourceType =
+                    contentType.startsWith("video/")
+                            ? "video"
+                            : "image";
 
-            String originalFileName = file.getOriginalFilename();
+            Map<String, Object> uploadOptions = ObjectUtils.asMap(
+                    "resource_type", resourceType,
+                    "folder", "studytrack/task-proofs"
+            );
 
-            String extension = "";
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    uploadOptions
+            );
 
-            if (originalFileName != null &&
-                    originalFileName.contains(".")) {
+            Object secureUrl = uploadResult.get("secure_url");
 
-                extension = originalFileName.substring(
-                        originalFileName.lastIndexOf(".")
+            if (secureUrl == null) {
+                throw new RuntimeException(
+                        "Cloudinary did not return a secure URL"
                 );
             }
 
-            String fileName = UUID.randomUUID() + extension;
-
-            Path targetPath = uploadPath.resolve(fileName);
-
-            Files.copy(
-                    file.getInputStream(),
-                    targetPath,
-                    StandardCopyOption.REPLACE_EXISTING
-            );
-
-            return "/uploads/" + fileName;
+            return secureUrl.toString();
 
         } catch (IOException e) {
 
             throw new RuntimeException(
-                    "Could not store uploaded file",
+                    "Could not upload file to Cloudinary",
                     e
             );
         }
