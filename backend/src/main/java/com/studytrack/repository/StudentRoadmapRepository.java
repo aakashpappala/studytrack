@@ -10,12 +10,22 @@ import java.util.Optional;
 
 @Repository
 public interface StudentRoadmapRepository extends JpaRepository<StudentRoadmap, Long> {
+
     List<StudentRoadmap> findByStudentId(Long studentId);
-    Optional<StudentRoadmap> findByStudentIdAndStatus(Long studentId, String status);
-    Optional<StudentRoadmap> findByStudentIdAndRoadmapId(Long studentId, Long roadmapId);
+
+    Optional<StudentRoadmap> findByStudentIdAndStatus(
+            Long studentId,
+            String status);
+
+    Optional<StudentRoadmap> findByStudentIdAndRoadmapId(
+            Long studentId,
+            Long roadmapId);
 
     @Query("SELECT sr FROM StudentRoadmap sr WHERE sr.student.user.email = :email AND sr.status = 'ACTIVE'")
-    Optional<StudentRoadmap> findActiveByStudentEmail(@Param("email") String email);
+    Optional<StudentRoadmap> findActiveByStudentEmail(
+            @Param("email") String email);
 
     long countByRoadmapId(Long roadmapId);
+
+    void deleteByRoadmapId(Long roadmapId);
 }

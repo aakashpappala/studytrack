@@ -122,8 +122,16 @@ public class RoadmapService {
 
     @Transactional
     public void deleteRoadmap(Long id) {
+
         Roadmap roadmap = roadmapRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Roadmap not found with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Roadmap not found with id: " + id));
+
+        // First remove student-roadmap assignments
+        studentRoadmapRepository.deleteByRoadmapId(id);
+
+        // Then delete roadmap
         roadmapRepository.delete(roadmap);
     }
 
