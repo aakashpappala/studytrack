@@ -209,6 +209,18 @@ public class TaskController {
         );
     }
 
+    @DeleteMapping("/api/admin/tasks/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteTask(
+            @PathVariable Long id) {
+
+        taskService.deleteTask(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.ok("Task deleted successfully", null)
+        );
+    }
+
     @PostMapping("/api/admin/tasks")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<TaskDto>> createTaskForStudent(
