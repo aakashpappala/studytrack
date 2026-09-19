@@ -620,6 +620,28 @@ public class TaskService {
             }
         }
 
+        /*
+         * OLD COMPLETED TASK FALLBACK
+         *
+         * Old tasks ki submission history undakapoyina,
+         * Task table lo old proofType/proofUrl untayi.
+         * Vatini student-side final proof ga expose chestunnam.
+         */
+        if (proofs.isEmpty()
+                && t.getStatus() == TaskStatus.COMPLETED
+                && t.getProofUrl() != null
+                && !t.getProofUrl().isBlank()) {
+
+            TaskProofDto oldProof = new TaskProofDto();
+
+            oldProof.setId(null);
+            oldProof.setProofType(t.getProofType());
+            oldProof.setProofUrl(t.getProofUrl());
+            oldProof.setUploadedAt(t.getSubmittedAt());
+
+            proofs.add(oldProof);
+        }
+
         return TaskDto.builder()
                 .id(t.getId())
 
