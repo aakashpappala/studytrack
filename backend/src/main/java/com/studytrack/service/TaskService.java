@@ -469,27 +469,7 @@ public class TaskService {
          */
         taskRepository.delete(task);
     }
-    // ============================================================
-    // ADMIN - DELETE TASK
-    // ============================================================
 
-    @Transactional
-    public void deleteTask(Long taskId) {
-
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Task not found with id: " + taskId));
-
-        // Delete proofs first because task_proofs.task_id references tasks.id
-        taskProofRepository.deleteByTask(task);
-
-        // Delete submission history next because task_submissions.task_id references tasks.id
-        taskSubmissionRepository.deleteByTask(task);
-
-        // Finally delete the task itself
-        taskRepository.delete(task);
-    }
 
     // ============================================================
     // ADMIN - GET PENDING VERIFICATION TASKS
