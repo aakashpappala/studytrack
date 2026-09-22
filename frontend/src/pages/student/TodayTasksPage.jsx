@@ -104,14 +104,14 @@ export default function TodayTasksPage() {
       }
 
       // 50 MB per file
-      if (file.size > 50 * 1024 * 1024) {
-
-        alert(
-          `File size must be less than 50 MB.\n\nFile: ${file.name}`
-        );
-
-        return;
-      }
+//       if (file.size > 50 * 1024 * 1024) {
+//
+//         alert(
+//           `File size must be less than 50 MB.\n\nFile: ${file.name}`
+//         );
+//
+//         return;
+//       }
     }
 
     // Save multiple files for this task
@@ -885,7 +885,7 @@ export default function TodayTasksPage() {
                                 </p>
 
                                 <p className="text-[10px] text-slate-400">
-                                  Maximum 10 files • 50 MB per file
+                                  Maximum 10 files
                                 </p>
 
                               </div>
